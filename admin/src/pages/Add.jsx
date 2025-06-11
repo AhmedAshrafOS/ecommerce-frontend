@@ -18,6 +18,17 @@ const Add = ({token}) => {
   const [bestseller, setBestseller] = useState(false)
   const [sizes, setSizes] = useState([])
 
+  const categoryFilters = {
+      Fashion: ['Topwear', 'Bottomwear', 'Winterwear', 'Accessories'],
+      Electronics: ['Phones', 'Laptops', 'Cameras'],
+      'Home & Living': ['Furniture', 'Kitchen', 'Bedding'],
+      Beauty: ['Skincare', 'Makeup', 'Haircare'],
+      Books: ['Fiction', 'Non-fiction', 'Comics'],
+      Sports: ['Fitness', 'Outdoor', 'Equipment'],
+    };
+
+
+  
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -87,23 +98,29 @@ const Add = ({token}) => {
     </div>
     <div className='flex flex-col sm:flex-row gap-2 w-full sm:gap-8'>
 
+      {/* Product Category */}
       <div>
         <p className='mb-2'>Product category</p>
-        <select onChange={(e)=> setCategory(e.target.value)} value={category} className='w-full px-3 py-2'>
-          <option value="Men">Men</option>
-          <option value="Women">Women</option>
-          <option value="Kids">Kids</option>
+        <select onChange={(e) => {
+          setCategory(e.target.value);
+          setSubCategoy(categoryFilters[e.target.value][0]); // Reset subcategory when category changes
+        }} value={category} className='w-full px-3 py-2'>
+          {Object.keys(categoryFilters).map((cat, i) => (
+            <option key={i} value={cat}>{cat}</option>
+          ))}
         </select>
       </div>
 
+      {/* Subcategory (Dependent) */}
       <div>
         <p className='mb-2'>Sub category</p>
-        <select onChange={(e)=> setSubCategoy(e.target.value)} value={subCategory} className='w-full px-3 py-2'>
-          <option value="Topwear">Topwear</option>
-          <option value="Bottomwear">Bottomwear</option>
-          <option value="Winterwear">Winterwear</option>
+        <select onChange={(e) => setSubCategoy(e.target.value)} value={subCategory} className='w-full px-3 py-2'>
+          {categoryFilters[category]?.map((sub, i) => (
+            <option key={i} value={sub}>{sub}</option>
+          ))}
         </select>
       </div>
+
 
       <div>
         <p className='mb-2'>Product price</p>
