@@ -59,6 +59,7 @@ import logo from './logo.png'
 import hero_img from './hero_img.png'
 import cart_icon from './cart_icon.png'
 import bin_icon from './bin_icon.png'
+import wishlist_icon from './wishlist_icon.png'
 import dropdown_icon from './dropdown_icon.png'
 import exchange_icon from './exchange_icon.png'
 import profile_icon from './profile_icon.png'
@@ -86,6 +87,7 @@ export const assets = {
     star_dull_icon,
     star_icon,
     bin_icon,
+    wishlist_icon,
     support_img,
     menu_icon,
     about_img,

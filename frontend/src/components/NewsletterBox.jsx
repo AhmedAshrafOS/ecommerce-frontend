@@ -10,7 +10,14 @@ const NewsletterBox = () => {
         <p className='text-gray-400 mt-3'>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Praesentium, libero.</p>
         <form onSubmit={onSubmitHandler} className='w-full sm:w-1/2 flex items-center gap-3 mx-auto my-6 border pl-3'>
             <input className='w-full sm:flex-1 outline-none'type="email" placeholder='Enter your email' required/>
-            <button className='bg-black text-white text-xs px-10 py-4' type='submit'>SUBSCRIBE</button>
+
+            <button
+              className="relative group overflow-hidden bg-black text-white text-sm my-8 px-8 py-3"
+            >
+              <span className="absolute inset-0 bg-red-600 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></span>
+              <span className="relative z-10">SUBSCRIBE</span>
+            </button>
+
         </form>
     </div>
   )

@@ -35,19 +35,15 @@ const PlaceOrder = () => {
       let orderItems = [];
 
       Object.keys(cartItems).forEach((itemId) => {
-        Object.keys(cartItems[itemId]).forEach((size) => {
-          if (cartItems[itemId][size] > 0) {
-            const itemInfo = structuredClone(products.find(product => product._id === itemId));
-            if (itemInfo) {
-              itemInfo.size = size;
-              itemInfo.quantity = cartItems[itemId][size];
-              orderItems.push(itemInfo);
-            }
+        if (cartItems[itemId].quantity > 0) {
+          const itemInfo = structuredClone(products.find(product => product._id === itemId));
+          if (itemInfo) {
+            itemInfo.quantity = cartItems[itemId].quantity;
+            orderItems.push(itemInfo);
           }
-        });
+        }
       });
-      console.log(formData);
-      
+
       let orderData = {
         address: formData,
         items: orderItems,
@@ -56,7 +52,9 @@ const PlaceOrder = () => {
 
       switch (method) {
         case 'cod':
-          const response = await axios.post(`${backendUrl}/api/order/place`, orderData, { headers: { token } });
+          const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
+            headers: { token }
+          });
           if (response.data.success) {
             setCartItems({});
             navigate('/orders');

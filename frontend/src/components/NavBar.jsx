@@ -15,7 +15,11 @@ const NavBar = () => {
   return (
     <div className="flex items-center justify-between py-5 font-medium">
       {/* Logo */}
-      <Link to='/'><img src={assets.logo} className="w-36" alt="Logo" /></Link>
+      <Link to='/' className="flex items-center gap-2 text-gray-700 hover:text-black transition-colors">
+      <img src={assets.logo} className="w-10" alt="Logo" />
+      <span className="text-red-600" >VOIS E-shop</span>
+      
+      </Link>
 
       {/* Navigation Links */}
       <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
@@ -26,8 +30,8 @@ const NavBar = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/collection" className="flex flex-col items-center gap-1">
-            <p>COLLECTION</p>
+          <NavLink to="/categories" className="flex flex-col items-center gap-1">
+            <p>CATEGORIES</p>
             <hr className="w-2/4 border-none h-1.5 bg-gray-700 group-hover:block hidden" />
           </NavLink>
         </li>
