@@ -1,23 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import { backendUrl, currency } from '../App';
 import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
 
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchAllOrders = async () => {
+  const fetchAllOrders = async (currentPage = 0) => {
     if (!token) return;
 
     try {
-      const response = await axios.post(
-        `${backendUrl}api/order/list`,
-        {},
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        setOrders(response.data.orders);
+      const response = await axios.get(`${backendUrl}api/v1/orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { page: currentPage, size: 5 }
+      });
+
+      if (response.status === HttpStatusCode.Ok) {
+        const content = response.data.content;
+
+        if (Array.isArray(content) && content.length > 0) {
+
+          
+          setOrders(content);
+        } else {
+          setOrders([]);
+        }
+
+        setTotalPages(response.data.totalPages || 1);
       } else {
         toast.error(response.data.message);
       }
@@ -28,14 +40,14 @@ const Orders = ({ token }) => {
 
   const statusHandler = async (event, orderId) => {
     try {
-      const response = await axios.post(
-        `${backendUrl}api/order/status`,
-        { orderId, status: event.target.value },
-        { headers: { token } }
+      const response = await axios.patch(
+        `${backendUrl}api/v1/orders/${orderId}?orderStatus=${event.target.value}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data.success) {
+      if (response.status === HttpStatusCode.NoContent) {
         toast.success('Order status updated');
-        await fetchAllOrders();
+        fetchAllOrders(page);
       } else {
         toast.error(response.data.message);
       }
@@ -45,66 +57,79 @@ const Orders = ({ token }) => {
   };
 
   useEffect(() => {
-    fetchAllOrders();
-  }, [token]);
+    fetchAllOrders(page);
+  }, [token, page]);
 
   return (
     <div>
-      <h3>Order Page</h3>
-      <div>
-        {orders.map((order, index) => (
+      <h3 className="text-xl font-semibold mb-4">Order Page</h3>
+
+      <div className="space-y-4">
+        {orders.map((order, idx) => (
           <div
-            key={index}
-            className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-300 p-5 md:p-8 my-3 md:my-4 text-xs sm:text-sm text-gray-700"
+            key={idx}
+            className="grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-3 items-start border-2 border-gray-300 p-5 rounded"
           >
-            <img className="w-12" src={assets.parcel_icon} alt="Parcel Icon" />
+            <img src={assets.parcel_icon} alt="Parcel Icon" className="w-12" />
+
             <div>
-              <div>
-                {order.items.map((item, idx) => (
-                  <p className="py-0.5" key={idx}>
-                    {item.name} x {item.quantity}{' '}
-                    {idx === order.items.length - 1 ? (
-                      <span>{item.size}</span>
-                    ) : (
-                      <span>, </span>
-                    )}
+              <div className="space-y-1">
+                {order.orderItems.map((item, i) => (
+                  <p key={i} className="text-sm">
+                    {item.name} x {item.quantity}
                   </p>
                 ))}
               </div>
-              <p className="mt-3 mb-2 font-medium">
-                {order.address.firstName + ' ' + order.address.lastName}
+              <p className="mt-3 font-medium">{order.shippingAddress}</p>
+              <p className="text-gray-500 text-sm">
+                {new Date(order.createdDate).toLocaleDateString()}
               </p>
-              <div>
-                <p>{order.address.street + ','}</p>
-                <p>
-                  {order.address.city + ', ' + order.address.state + ', ' + order.address.country + ', ' + order.address.zipcode}
-                </p>
-              </div>
-              <p>{order.address.phone}</p>
             </div>
-            <div>
-              <p className="text-sm sm:text-[15px]">Items: {order.items.length}</p>
-              <p className="mt-3">Method: {order.paymentMethod}</p>
-              <p>Payment: {order.payment}</p>
-              <p>Date: {new Date(order.date).toLocaleDateString()}</p>
+
+            <div className="space-y-2">
+              <p className="text-sm">Items: {order.orderItems.length}</p>
+              <p className="text-sm">Method: {order.paymentMethod}</p>
+              <p className="text-sm">Status: {order.status}</p>
             </div>
-            <p className="text-sm sm:text-[15px]">
+
+            <p className="text-sm font-semibold">
               {currency}
-              {order.amount}
+              {order.totalAmount}
             </p>
+
             <select
-              onChange={(event) => statusHandler(event, order._id)}
+              onChange={(e) => statusHandler(e, order.orderId)}
               value={order.status}
-              className="p-2 font-semibold"
+              className="p-2 border rounded"
             >
-              <option value="Order Placed">Order Placed</option>
-              <option value="Packing">Packing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Out for delivery">Out for delivery</option>
-              <option value="Delivered">Delivered</option>
+              <option value="PENDING">Order Placed</option>
+              <option value="READY_FOR_DELIVERY">Packing</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="OUT_FOR_DELIVERY">Out for delivery</option>
+              <option value="DELIVERED">Delivered</option>
             </select>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-center items-center gap-4 mt-6">
+        <button
+          onClick={() => setPage((p) => Math.max(p - 1, 0))}
+          disabled={page === 0}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="font-medium">
+          {page + 1} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+          disabled={page + 1 >= totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

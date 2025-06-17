@@ -1,91 +1,131 @@
-import axios from 'axios'
-import React from 'react'
-import { backendUrl, currency } from '../App'
-import { toast } from 'react-toastify'
-import { useState, useEffect } from 'react'
+import axios, { HttpStatusCode } from 'axios';
+import { backendUrl, currency } from '../App';
+import { toast } from 'react-toastify';
+import { useState, useEffect } from 'react';
 
-const List = () => {
-  const [list, setList] = useState([])
-  const fetchList = async()=>{
-    try{
-      const response = await axios.get(backendUrl + 'api/product/list')
-      if(response.data.success){
-        setList(response.data.products)
-      }
-      else{
-        toast.error(response.data.message)
-      }
-    }
-    catch (error){
-      console.error(error)
-      toast.error(error.message)
-    }
-  }
+const List = ({ token }) => {
+  const [list, setList] = useState([]);
+  const [page, setPage] = useState(0); // current page
+  const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(()=>{
-    fetchList()
-  }, [])
-
-  console.log("Fetched Products:", list) 
-
-  const removeProduct = async (id) => {
+  const fetchList = async () => {
     try {
-      const token = localStorage.getItem('token');  // ✅ Fetch token
-      if (!token) {
-        toast.error('Authentication token not found');
-        return;
-      }
-  
-      const response = await axios.post(
-        backendUrl + 'api/product/remove',
-        { id },
-        { headers: { token } }  // ✅ Pass token properly
-      );
+      const response = await axios.get(backendUrl + 'api/v1/products', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          page: page,
+          size: 5,
+        }
+      });
 
-
-  
-      if (response.data.success) {
-        toast.success(response.data.message);
-        await fetchList();
+      if (response.status === HttpStatusCode.Ok) {
+          const content = response.data.content;
+          
+          if (Array.isArray(content)&& content.length > 0) {
+            setList(content);
+              } else {
+            setList([]);
+            }
+          
+        setTotalPages(response.data.totalPages);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchList();
+  }, [page]);
+
+  const removeProduct = async (id) => {
+    try {
+      const response = await axios.delete(
+        backendUrl + `api/v1/products/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.status === HttpStatusCode.NoContent) {
+        toast.success("Product deleted");
+        fetchList();
+      } else {
+        toast.error("Delete failed");
+      }
+    } catch (error) {
       toast.error(error.response?.data?.message || error.message);
     }
   };
-  
-  
 
   return (
     <>
-      <p className='mb-2'>All Products List</p>
-      <div className='flex flex-col gap-2'>
-        {/*List Table Title */}
-        <div className='hidden md:grid grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center py-1 px-2 border bg-gray-100 text-sm'>
-          <b>Image</b>
-          <b>Name</b>
-          <b>Category</b>
-          <b>Price</b>
-          <b className='text-center'>Action</b>
+        <p className='mb-2'>All Products List</p>
+        <div className='flex flex-col gap-2'>
+          {/* Header Row */}
+          <div className='hidden md:flex items-center justify-between py-1 px-2 border bg-gray-100 text-sm font-bold'>
+            <p className='w-16'>Image</p>
+            <p className='flex-1'>Name</p>
+            <p className='w-28'>Category</p>
+            <p className='w-28'>Brand</p>
+            <p className='w-16'>Stock</p>
+            <p className='w-20 text-center'>Price</p>
+            <p className='w-10 text-center'>Action</p>
+          </div>
+
+          {/* Product Rows */}
+          {list.map((item, index) => (
+            <div
+              key={index}
+              className='flex flex-wrap md:flex-nowrap items-center gap-2 py-1 px-2 border text-sm'
+            >
+              <img className='w-12 h-12 object-cover' src={item.productImage.imageUrl||''} alt={item.name} />
+              <p className='flex-1'>{item.name}</p>
+              <p className='w-28'>{item.category}</p>
+              <p className='w-28'>{item.brandName}</p>
+              <p className='w-16'>{item.stockQuantity}</p>
+              <p className='w-20 text-center'>
+                {currency}
+                {item.price}
+              </p>
+              <p
+                onClick={() => removeProduct(item.productId)}
+                className='w-10 text-right md:text-center cursor-pointer text-lg text-red-500'
+              >
+                X
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* Product List */}
-        {
-          list.map((item, index) => (
-            <div className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm' key={index}>
-              <img className='w-12' src={item.images?.[0] || 'default-image-url'} alt={item.name} />
-              <p>{item.name}</p>
-              <p>{item.category}</p>
-              <p>{currency}{item.price}</p>
-              <p onClick={()=> removeProduct(item._id)} className='text-right md:text-center cursor-pointer text-lg'>X</p>
-            </div>
-          ))
-        }
+
+      {/* Pagination Controls */}
+      <div className='flex justify-center gap-2 mt-4'>
+        <button
+          disabled={page === 0}
+          onClick={() => setPage(prev => prev - 1)}
+          className='px-3 py-1 border rounded disabled:opacity-50'
+        >
+          Prev
+        </button>
+        <span className='px-3 py-1'>Page {page + 1} of {totalPages}</span>
+        <button
+          disabled={page + 1 >= totalPages}
+          onClick={() => setPage(prev => prev + 1)}
+          className='px-3 py-1 border rounded disabled:opacity-50'
+        >
+          Next
+        </button>
       </div>
     </>
-  )
-}
+  );
+};
 
 export default List;
