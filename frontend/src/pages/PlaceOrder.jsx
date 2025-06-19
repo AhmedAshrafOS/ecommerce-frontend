@@ -4,8 +4,9 @@ import CartTotal from '../components/CartTotal';
 import { assets } from '../assets/assets';
 import { ShopContext } from '../context/ShopContext';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../api'
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
@@ -29,47 +30,68 @@ const PlaceOrder = () => {
     setFormData((data) => ({ ...data, [name]: value }));
   };
 
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
-    try {
-      let orderItems = [];
+const onSubmitHandler = async (event) => {
+  event.preventDefault();
 
-      Object.keys(cartItems).forEach((itemId) => {
-        if (cartItems[itemId].quantity > 0) {
-          const itemInfo = structuredClone(products.find(product => product._id === itemId));
-          if (itemInfo) {
-            itemInfo.quantity = cartItems[itemId].quantity;
-            orderItems.push(itemInfo);
-          }
+  try {
+    if (method !== 'cod') {
+           let orderItems = [];
+
+
+    Object.keys(cartItems).forEach((itemId) => {
+      if (cartItems[itemId].quantity > 0) {
+        const itemInfo = structuredClone(products.find(product => product._id === itemId));
+        if (itemInfo) {
+          itemInfo.quantity = cartItems[itemId].quantity;
+          orderItems.push(itemInfo);
         }
-      });
-
-      let orderData = {
-        address: formData,
-        items: orderItems,
-        amount: getCartAmount() + delivery_fee
-      };
-
-      switch (method) {
-        case 'cod':
-          const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
-            headers: { token }
-          });
-          if (response.data.success) {
-            setCartItems({});
-            navigate('/orders');
-          } else {
-            toast.error(response.data.message);
-          }
-          break;
-        default:
-          break;
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message);
+    });
+
+    const responseOne = await api.post(`${backendUrl}/orders`, {
+      address: formData,
+      paymentMethod: method,
+      currency: 'usd',
+      email: formData.email,
+    });
+    console.log(responseOne.data);
+    
+    if (responseOne.status ===HttpStatusCode.Created &&responseOne.data) {
+      if ( responseOne.data.checkoutUrl) {
+        window.location.href = responseOne.data.checkoutUrl; // redirect to gateway
+      } else {
+        toast.error(responseOne.data.message || 'Payment initialization failed');
+      }
     }
-  };
+      return; // stop here if payment method is not cod
+    }
+
+    // ========== COD FLOW ==========
+ 
+
+    const orderData = {
+      address: formData,
+      items: orderItems,
+      amount: getCartAmount() + delivery_fee,
+      method
+    };
+
+    const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
+      headers: { token }
+    });
+
+    if (response.data.success && response.data.orderId) {
+      setCartItems({});
+      navigate(`/orders/${response.data.orderId}`);
+    } else {
+      toast.error(response.data.message);
+    }
+
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message || 'Something went wrong');
+  }
+};
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
@@ -100,21 +122,26 @@ const PlaceOrder = () => {
         <div className='mt-12'>
           <Title text1={'PAYMENT'} text2={'METHOD'} />
           <div className='flex gap-3 flex-col lg:flex-row'>
-            <div onClick={() => setMethod('stripe')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
+            <div onClick={() => setMethod('STRIPE')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'STRIPE' ? 'bg-green-400' : ''}`}></p>
               <img className={`h-5 mx-4`} src={assets.stripe_logo} alt="Stripe" />
             </div>
-            <div onClick={() => setMethod('razorpay')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`} ></p>
-              <img className={`h-5 mx-4`} src={assets.razorpay_logo} alt="Razorpay" />
+            <div onClick={() => setMethod('PAYMOB')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'PAYMOB' ? 'bg-green-400' : ''}`} ></p>
+              <img className={`h-5 mx-4`} src={assets.paymob_logo} alt="Paymob" />
             </div>
-            <div onClick={() => setMethod('cod')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
-              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-green-400' : ''}`}></p>
+            <div onClick={() => setMethod('COD')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+              <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'COD' ? 'bg-green-400' : ''}`}></p>
               <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
             </div>
           </div>
           <div className='w-full text-end mt-8'>
-            <button type='submit' className='bg-black text-white px-16 py-3 text-sm'>PLACE ORDER</button>
+            <button type='submit' 
+                        className="relative group overflow-hidden bg-black text-white text-sm my-8 px-8 py-3"
+          >
+            <span className="absolute inset-0 bg-red-600 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></span>
+            <span className="relative z-10">PROCEED TO CHECKOUT</span>
+          </button>
           </div>
         </div>
       </div>

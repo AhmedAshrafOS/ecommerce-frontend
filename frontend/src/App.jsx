@@ -12,16 +12,25 @@ import Collection from './pages/Collection';
 import Categories from './pages/Categories'; 
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
+import Shop from './pages/Shop';
+import Signup from './pages/Signup';
+import VerifyEmail from './pages/VerfiyEmail';
 import SearchBar from './components/SearchBar';
-import { ToastContainer, toast } from "react-toastify";
+import SearchResults from './pages/SearchResults';
+import { ToastContainer, toast ,Slide} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import OrderSuccess from './pages/OrderSuccess';
 
 const App = () => {
   return (
     <>
         <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-      <ToastContainer/>
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        closeOnClick
+        transition={Slide} 
+      />
       <NavBar />
       <SearchBar/>
       <Routes>
@@ -33,8 +42,14 @@ const App = () => {
         <Route path="/product/:productId" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/verifyemail" element={<VerifyEmail />} />
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/results" element={<SearchResults />} />
+        <Route path="/orders/:orderId" element={<OrderSuccess />} />
+
       </Routes>
    
     </div>

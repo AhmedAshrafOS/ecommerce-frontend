@@ -4,12 +4,14 @@ import Title from './Title';
 import ProductItem from './ProductItem';
 
 const LatestCollection = () => {
-  const { products } = useContext(ShopContext); // Only accessing the necessary value
+  const { products ,getAllProducts} = useContext(ShopContext); // Only accessing the necessary value
   const [latestProducts, setLatestProducts] = useState([]);
 
   useEffect(() => {
+    
     setLatestProducts(products.slice(0, 10));
-  }, [products]); // Ensure that you re-fetch products if they change
+  }, [products]); 
+
 
   return (
     <div className='my-10'>
@@ -22,7 +24,8 @@ const LatestCollection = () => {
       {/* Rendering products */}
       <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6'>
         {latestProducts.map((item, index) => (
-          <ProductItem key={index} id={item._id} image={item.images} name={item.name} price={item.price} />
+          
+          <ProductItem key={index} id={item.productId} imageUrl={item.productImage.imageUrl} name={item.name} price={item.price} discountPercentage = {item.discountPercentage} />
         ))}
       </div>
     </div>

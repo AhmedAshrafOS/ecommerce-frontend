@@ -1,73 +1,109 @@
-import React, { useState } from 'react'
-import { useContext } from 'react';
-import { ShopContext } from '../context/ShopContext';
-import axios from 'axios';
-import { useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios, { HttpStatusCode } from 'axios';
 import { toast } from 'react-toastify';
+import { ShopContext } from '../context/ShopContext';
+
 const Login = () => {
-  const [currentState, setCurrentState]= useState('Sign Up');
-  const {token, setToken, navigate, backendUrl,getUserCart} = useContext(ShopContext);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
-    try{
-      if(currentState === 'Sign Up'){
-        const response = await axios.post(backendUrl + '/api/user/register', {name, email, password})
-        if(response.data.success){
-          setToken(response.data.token)
-          localStorage.setItem('token', response.data.token)
-        }
-        else{
-          toast.error(response.data.message)
-        }
+  const { backendUrl, setToken, getUserCart } = useContext(ShopContext);
+  const navigate = useNavigate();
+  const [credentials, setCredentials] = useState({
+    usernameOrEmail: '',
+    password: ''
+  });
+
+  const handleChange = e => {
+    setCredentials(c => ({ ...c, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    try {
+      const resp = await axios.post(
+        `${backendUrl}/auth/login`,
+        credentials
+      );
+      if (resp.status === HttpStatusCode.Ok) {
+          const token = resp.data.token;
+          setToken(token);
+          localStorage.setItem('token', token);
+          // await getUserCart(token);
+          toast.success('Logged in!');
+          navigate('/');
       }
-      else{
-        const response = await axios.post(backendUrl + '/api/user/login', {email, password})
-        if(response.data.success){
-          setToken(response.data.token)
-          localStorage.setItem('token', response.data.token)
-          getUserCart(response.data.token)
+      else if (resp.status === HttpStatusCode.Forbidden) {
+        toast.error(resp.data.message || 'Access forbidden');
 
         }
-        else{
-          toast.error(response.data.message)
-        }
-      }
+
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message);
     }
-    catch (error){
-      console.log(error);
-      toast.error(error.message)
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      navigate('/');
     }
-  }
-  useEffect(()=>{
-    if(token){
-      navigate('/')
-    }
-  })
+  }, [navigate]);
+
   return (
-    <div>
-      <form onSubmit={onSubmitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800'>
-        <div className='inline-flex items-center gap-2 mb-2 mt-10'>
-          <p className='prata-regular text-3xl'>{currentState}</p>
-          <hr className='border-none h-[1.5px] w-8 bg-gray-800'/>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-sm mx-auto mt-10 space-y-4 p-6 border rounded"
+    >
+      <h2 className="text-2xl font-semibold text-center">Log In</h2>
+
+      <input
+        name="usernameOrEmail"
+        value={credentials.usernameOrEmail}
+        onChange={handleChange}
+        placeholder="Username or Email"
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
+
+      <input
+        name="password"
+        type="password"
+        value={credentials.password}
+        onChange={handleChange}
+        placeholder="Password"
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
+
+
+      <button
+        type="submit"
+        className="w-full bg-black text-white py-2 rounded hover:bg-red-600 transition"
+      >
+        Log In
+      </button>
+
+
+       <div className="flex flex-row justify-between items-center">
+        <Link
+          to="/forgot-password"
+          className="text-red-600 text-sm hover:underline"
+        >
+          Forgot your password?
+        </Link>
+        <div justify-content="flex-end" className="flex flex-col items-end">
+          <p className=" text-sm text-black">
+            Don’t have an account?{' '}
+         </p>
+                 <Link to="/signup" className="text-red-600 text-right text-sm hover:underline">
+
+          Sign up
+        </Link>
+
         </div>
-        {currentState === 'Login' ? '' : <input onChange={(e)=>setName(e.target.value)} value={name} type="text" className='w-full px-3 py-2 border border-gray-800' placeholder='Name' required/>}
-        <input onChange={(e)=>setEmail(e.target.value)} value={email} type="email" className='w-full px-3 py-2 border border-gray-800' placeholder='Email' required/>
-        <input onChange={(e)=>setPassword(e.target.value)} value={password} type="password" className='w-full px-3 py-2 border border-gray-800' placeholder='Password'required/>
-        <div className='w-full flex justify-between text-sm mt-[-8px]'>
-          <p className='cursor-pointer'>Forgot your password?</p>
-          {
-            currentState === 'Login'
-            ? <p onClick={()=> setCurrentState('Sign Up')} className='cursor-pointer'>Create account</p>
-            : <p onClick={()=> setCurrentState('Login')} className='cursor-pointer'>Login Here</p>
-          }
-        </div>
-        <button className='bg-black text-white font-light px-8 py-2 mt-4'>{currentState === 'Login' ? 'Sign In' : 'Sign Up'}</button>
-      </form>
-    </div>
-  )
-}
+
+      </div>
+
+    </form>
+  );
+};
 
 export default Login;

@@ -1,42 +1,64 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const SearchBar = () => {
-  const { search, setSearch, showSearch, setShowSearch } = useContext(ShopContext);
-  const [visible, setVisible] = useState(false);
-  const location = useLocation();
+  const { backendUrl, setShowSearch,showSearch } = useContext(ShopContext);
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if(location.pathname.includes('collection') && showSearch){
-      setVisible(true);
-    }
-    else{
-      setVisible(false);
-    }
-  }, [location])
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+const results = [];
+    try {
+      const res = await axios.get(`${backendUrl}/api/search?query=${query}`);
+      const results = res.data.products || [];
+      navigate('/results', { state: { results, keyword: query } });
+      setShowSearch(false);
+    } catch (err) {
 
-  return showSearch && visible ? (
+      navigate('/results', { state: { results, keyword: query } });
+      setShowSearch(false);
+
+      toast.error('Search failed. Please try again.');
+      console.error('Search failed:', err);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  return showSearch ?  (
     <div className="border-t border-b bg-gray-50 text-center">
       <div className="inline-flex items-center justify-center border border-gray-400 px-5 py-2 my-5 mx-3 rounded-full">
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="flex-1 outline-none bg-inherit text-sm"
           type="text"
           placeholder="Search"
         />
-        <img className="w-4" src={assets.search_icon} alt="" />
+        <img
+          className="w-4 cursor-pointer"
+          src={assets.search_icon}
+          alt="Search"
+          onClick={handleSearch}
+        />
       </div>
       <img
         onClick={() => setShowSearch(false)}
         className="inline w-3 cursor-pointer"
         src={assets.cross_icon}
-        alt=""
+        alt="Close"
       />
     </div>
-  ) : null;
+  )
+  : null;
 };
 
 export default SearchBar;
