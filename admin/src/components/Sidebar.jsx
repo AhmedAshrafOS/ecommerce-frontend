@@ -8,7 +8,7 @@ const Sidebar = ({ userRole }) => {
   return (
     <>
       {/* Desktop / Tablet */}
-      <aside className="hidden md:flex flex-col w-1/5 border-r bg-white">
+      <aside className="hidden md:flex flex-col w-1/5 border-r max-h-full  bg-white">
         <nav className="flex flex-col gap-2 p-4">
           {isSuperAdmin && (
             <NavLink
@@ -40,6 +40,7 @@ const Sidebar = ({ userRole }) => {
             <img src={assets.order_icon} alt="" className="w-5 h-5" />
             <span className="text-sm">Order Items</span>
           </NavLink>
+          <div className='h-screen'></div>
         </nav>
       </aside>
 

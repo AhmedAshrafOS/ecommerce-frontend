@@ -82,8 +82,8 @@ const Add = ({token}) => {
     }
   }
   return (
-    <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-3' action="">
-      <div className='grid grid-flow-row-dense grid-cols-2 grid-rows-2 gap-8'>
+    <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-3 mb-[5vh]' action="">
+      <div className='grid grid-flow-row-dense grid-cols-2 grid-rows-2 gap-8 overflow-hidden'>
           <label htmlFor="image1" className='col-span-1'>
             <img className='w-20' src={!image1 ? assets.upload_area : URL.createObjectURL(image1)} alt="" />
             <input onChange={(e)=> setImage1(e.target.files[0])} type="file" id='image1' />
@@ -154,7 +154,8 @@ const Add = ({token}) => {
         <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller'/>
         <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
       </div>
-    <button className='w-28 py-3 mt-4 bg-black text-white'>ADD</button>
+    <button className='w-28 py-3 mt-4 bg-black text-white over'>ADD</button>
+
     </form>
   )
 }
