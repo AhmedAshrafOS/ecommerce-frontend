@@ -16,11 +16,12 @@ const PlaceOrder = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     street: '',
     city: '',
-    state: '',
-    zipcode: '',
+    governorate: '',
+    buildingNumber: '',
+    apartmentNumber: '',
+    floor: '',
     country: '',
     phone: ''
   });
@@ -81,7 +82,6 @@ const onSubmitHandler = async (event) => {
     });
 
     if (response.data.success && response.data.orderId) {
-      setCartItems({});
       navigate(`/orders/${response.data.orderId}`);
     } else {
       toast.error(response.data.message);
@@ -107,10 +107,14 @@ const onSubmitHandler = async (event) => {
         <input required onChange={onChangeHandler} name='street' value={formData.street} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Street' />
         <div className='flex gap-3'>
           <input required onChange={onChangeHandler} name='city' value={formData.city} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='City' />
-          <input required onChange={onChangeHandler} name='state' value={formData.state} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='State' />
+          <input required onChange={onChangeHandler} name='governorate' value={formData.governorate} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Governorate' />
         </div>
         <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='zipcode' value={formData.zipcode} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Zipcode' />
+          <input required onChange={onChangeHandler} name='buildingNumber' value={formData.buildingNumber} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Building Number' />
+          <input required onChange={onChangeHandler} name='apartmentNumber' value={formData.apartmentNumber} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Apartment Number' />
+        </div>
+        <div className='flex gap-3'>
+          <input required onChange={onChangeHandler} name='floor' value={formData.floor} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='floor' />
           <input required onChange={onChangeHandler} name='country' value={formData.country} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Country' />
         </div>
         <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
