@@ -12,7 +12,7 @@ const Cart = () => {
     updateQuantity,
     navigate,
     removeItemCart,
-    addToWishlist,
+    moveToWishList,
     token,
     currency
   } = useContext(ShopContext);
@@ -26,6 +26,7 @@ const Cart = () => {
     
   }, [cartItems]);
 
+  
   return (
     <div className='border-t pt-14'>
       <div className='text-2xl mb-3'>
@@ -70,8 +71,8 @@ const Cart = () => {
               <div>|</div>
               <img
                 onClick={() => {
-                  removeItemCart(item.productId);
-                  addToWishlist(item.productId, item.quantity);
+                  // removeItemCart(item.productId);
+                  moveToWishList(item.productId);
                 }}
                 src={assets.wishlist_icon}
                 className='w-4 sm:w-5 cursor-pointer'

@@ -18,8 +18,10 @@ const ShopContextProvider = (props) => {
     const [search, setSearch] = useState('');
     const [products, setProducts] = useState([]);
     const [cartItems, setCartItems] = useState([]);
+    const [addresses, setAddresses] = useState([]);
     const [showSearch, setShowSearch] = useState(false);
-    const [wishlistItems, setWishlistItems] = useState({});
+    const [wishlistData, setWishlistData] = useState([]);
+    const [customerProfile, setCustomerProfile] = useState(null);
 
     useEffect(() => {
 
@@ -27,10 +29,11 @@ const ShopContextProvider = (props) => {
         if (!token.length > 0 && localStorage.getItem('token')) {
 
             setToken(localStorage.getItem('token'))
-
+            fetchProfile();
         }
         else if (token.length > 0) {
             getUserCart(token)
+              fetchProfile();
         }
         else {
             const saved = Cookies.get('cartItems');
@@ -52,6 +55,53 @@ const ShopContextProvider = (props) => {
     }, [token])
 
 
+    const fetchProfile = async () => {
+        if (!token) return;
+        try {
+        const res = await api.get(`${backendUrl}/users/profile`);
+
+        setCustomerProfile(res.data);
+        setAddresses(res.data.addresses || []);
+        } catch (err) {
+        console.error(err);
+        toast.error("Failed to load profile");
+        }
+    };
+
+    const updateProfile = async (updateDTO) => {
+        try {
+        await api.patch(`${backendUrl}/customer/update`, updateDTO)
+        toast.success("Profile updated");
+        fetchProfile();
+        } catch (err) {
+        console.error(err);
+        toast.error("Update failed");
+        }
+    };
+
+    const createAddress = async (addressReq) => {
+        try {
+        await api.post(`${backendUrl}/addresses`, addressReq);
+        toast.success("Address added");
+        fetchProfile();
+        } catch (err) {
+        console.error(err);
+        toast.error("Failed to add address");
+        }
+    };
+    const deleteAddress = async (addressId, index) => {
+        try {
+        await api.get(
+            `${backendUrl}/addresses/${addressId}?addressIndex=${index}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Address removed");
+        fetchProfile();
+        } catch (err) {
+        console.error(err);
+        toast.error("Failed to remove address");
+        }
+    };
     const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems) || {};
 
@@ -132,6 +182,25 @@ const ShopContextProvider = (props) => {
         cartData[itemId].quantity = quantity;
         setCartItems(cartData);
         }
+    };
+
+    const getUserCart = async (token) => {
+        if (token) {
+            try {
+
+                const response = await api.get(backendUrl + '/cart', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.status === HttpStatusCode.Ok) {
+                    setCartItems(response.data.cartItems);
+                }
+            }
+            catch (error) {
+                console.log(error)
+                toast.error(error.message)
+            }
+        }
+
     };
 
     const removeItemCart = async (itemId) => {
@@ -254,41 +323,42 @@ const ShopContextProvider = (props) => {
         }
     };
 
-    const getUserCart = async (token) => {
-        if (token) {
-            try {
 
-                const response = await api.get(backendUrl + '/cart', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (response.status === HttpStatusCode.Ok) {
-                    setCartItems(response.data.cartItems);
-                }
-            }
-            catch (error) {
-                console.log(error)
-                toast.error(error.message)
+    const moveToWishList = async (productId) => {
+        if (token) {
+        try {
+            await api.post(
+            `${backendUrl}/cartItems/item/toWishlist/${productId}`);
+            setCartItems(cartItems.filter(item => item.productId !== productId));
+            getWishlist()
+            toast.success('Added to wishlist');
+        } catch (err) {
+            console.error(err);
+            toast.error('Could not add to wishlist');
+        }
+        } 
+        else {
+        toast.info('You need to login to move to wishlist');
+
+        }
+    };
+
+    const getWishlist = async () => {
+        if (!token) return
+        try {
+            const res = await axios.get(
+            `${backendUrl}/wishlist` 
+            )
+            if (res.status === 200) {
+            setWishlistData(res.data)
             }
         }
-
+        catch{
+            console.error('getWishlist error', err)
+            toast.error('Failed to load wishlist')
+            throw err
+        }
     };
-
-
-    const addToWishlist = (id, quantity = 1) => {
-        setWishlistItems((prev) => ({
-            ...prev,
-            [id]: (prev[id] || 0) + quantity
-        }));
-    };
-
-    const removeFromWishlist = (id) => {
-        setWishlistItems((prev) => {
-            const updated = { ...prev };
-            delete updated[id];
-            return updated;
-        });
-    };
-
     const value = {
         getCategoryProducts,
         products, currency, delivery_fee,
@@ -297,9 +367,15 @@ const ShopContextProvider = (props) => {
         getCartCount, updateQuantity, getCartAmount,
         navigate, backendUrl, token, setToken,
         setProducts, getUserCart, removeItemCart,
-        addToWishlist, wishlistItems, removeFromWishlist,
+        moveToWishList, wishlistData,setWishlistData,
         getAllProducts,
-        getProductById, getCartSavings
+        getProductById, getCartSavings,getWishlist,
+        customerProfile,
+        addresses,
+        fetchProfile,
+        updateProfile,
+        createAddress,
+        deleteAddress,
     };
     return (
         <ShopContext.Provider value={value}>

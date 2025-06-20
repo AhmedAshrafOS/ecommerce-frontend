@@ -1,46 +1,98 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios, { HttpStatusCode } from 'axios';
 import { toast } from 'react-toastify';
 import { ShopContext } from '../context/ShopContext';
 
+const LOCK_DURATION_MS = 60000; // 60 seconds
+
 const Login = () => {
   const { backendUrl, setToken, getUserCart } = useContext(ShopContext);
   const navigate = useNavigate();
+  const { search } = useLocation();
+
   const [credentials, setCredentials] = useState({
     usernameOrEmail: '',
     password: ''
   });
 
+  const [lockedUser, setLockedUser] = useState(null);
+  const [lockExpiry, setLockExpiry] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  // Handle session expired message
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get('expired')) {
+      toast.info("Your session has expired");
+    }
+  }, [search]);
+
+  // Timer countdown for lockout
+  useEffect(() => {
+    if (!lockExpiry) return;
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, lockExpiry - Date.now());
+      setTimeLeft(Math.ceil(remaining / 1000));
+
+      if (remaining <= 0) {
+        setLockedUser(null);
+        setLockExpiry(null);
+        setTimeLeft(0);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lockExpiry]);
+
   const handleChange = e => {
-    setCredentials(c => ({ ...c, [e.target.name]: e.target.value }));
+    setCredentials(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
-    try {
-      const resp = await axios.post(
-        `${backendUrl}/auth/login`,
-        credentials
-      );
-      if (resp.status === HttpStatusCode.Ok) {
-          const token = resp.data.token;
-          setToken(token);
-          localStorage.setItem('token', token);
-          // await getUserCart(token);
-          toast.success('Logged in!');
-          navigate('/');
-      }
-      else if (resp.status === HttpStatusCode.Forbidden) {
-        toast.error(resp.data.message || 'Access forbidden');
 
-        }
+    // Prevent resubmitting if still locked
+    if (
+      lockedUser &&
+      lockedUser === credentials.usernameOrEmail.toLowerCase() &&
+      Date.now() < lockExpiry
+    ) {
+      toast.warn(`Account is locked. Try again in ${timeLeft}s.`);
+      return;
+    }
+
+    try {
+      const resp = await axios.post(`${backendUrl}/auth/login`, credentials);
+
+      if (resp.status === HttpStatusCode.Ok) {
+        const token = resp.data.token;
+        setToken(token);
+        localStorage.setItem('token', token);
+        toast.success('Logged in!');
+        navigate('/');
+      } else if (resp.status === HttpStatusCode.Forbidden) {
+        toast.error(resp.data.message || 'Access forbidden');
+      }
 
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message);
+      const status = err.response?.status;
+      const message = err.response?.data?.message || err.message;
+
+      if (status === HttpStatusCode.Locked) {
+        // Account suspended
+        toast.error('Account Suspended. Password reset email has been sent.');
+        setLockedUser(credentials.usernameOrEmail.toLowerCase());
+        setLockExpiry(Date.now() + LOCK_DURATION_MS);
+        setTimeLeft(60);
+      } else {
+        toast.error(message);
+      }
     }
   };
 
+  // Redirect if already logged in
   useEffect(() => {
     if (localStorage.getItem('token')) {
       navigate('/');
@@ -73,35 +125,44 @@ const Login = () => {
         className="w-full border px-3 py-2 rounded"
       />
 
+      {lockedUser &&
+        lockedUser === credentials.usernameOrEmail.toLowerCase() &&
+        Date.now() < lockExpiry && (
+          <div>
+          <div className="text-red-600 text-sm">
+            This account is locked. Try again in {timeLeft}s.
+          </div>
+          <div>Account Suspended. Password reset email has been sent.</div>
+          </div>
+
+      )}
 
       <button
         type="submit"
-        className="w-full bg-black text-white py-2 rounded hover:bg-red-600 transition"
+        disabled={lockedUser === credentials.usernameOrEmail.toLowerCase() && Date.now() < lockExpiry}
+        className={`w-full py-2 rounded transition ${
+          lockedUser === credentials.usernameOrEmail.toLowerCase() && Date.now() < lockExpiry
+            ? 'bg-gray-500 text-white cursor-not-allowed'
+            : 'bg-black text-white hover:bg-red-600'
+        }`}
       >
         Log In
       </button>
 
-
-       <div className="flex flex-row justify-between items-center">
+      <div className="flex flex-row justify-between items-center">
         <Link
           to="/forgot-password"
           className="text-red-600 text-sm hover:underline"
         >
           Forgot your password?
         </Link>
-        <div justify-content="flex-end" className="flex flex-col items-end">
-          <p className=" text-sm text-black">
-            Don’t have an account?{' '}
-         </p>
-                 <Link to="/signup" className="text-red-600 text-right text-sm hover:underline">
-
-          Sign up
-        </Link>
-
+        <div className="flex flex-col items-end">
+          <p className="text-sm text-black">Don’t have an account?</p>
+          <Link to="/signup" className="text-red-600 text-right text-sm hover:underline">
+            Sign up
+          </Link>
         </div>
-
       </div>
-
     </form>
   );
 };

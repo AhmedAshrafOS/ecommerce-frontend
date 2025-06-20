@@ -20,6 +20,7 @@ import SearchResults from './pages/SearchResults';
 import { ToastContainer, toast ,Slide} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import OrderSuccess from './pages/OrderSuccess';
+import CustomerProfile from './pages/CustomerProfile';
 
 const App = () => {
   return (
@@ -49,7 +50,7 @@ const App = () => {
         <Route path="/shop" element={<Shop />} />
         <Route path="/search-results" element={<SearchResults />} />
         <Route path="/orders/:orderId" element={<OrderSuccess />} />
-
+        <Route path="/profile" element={<CustomerProfile />} />
       </Routes>
    
     </div>

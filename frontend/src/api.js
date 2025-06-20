@@ -31,11 +31,13 @@ axios.interceptors.response.use(
         });
       }
 
+                console.log("tesst");
       isRefreshing = true;
       
       return axios.post('http://localhost:8080/api/v1/auth/refresh',{}, { withCredentials: true })  // your refresh endpoint
         .then(({ data }) => {
           const newToken = data.token;
+
           
           localStorage.setItem('token', newToken);
           queue.forEach(cb => cb(newToken));
@@ -44,14 +46,20 @@ axios.interceptors.response.use(
           return axios(config);
         })
         .catch(() => {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          toast.info("Your Session Has been Expired")
+          if(localStorage.getItem('token')){
+            localStorage.removeItem('token');
+            window.location.href = '/login?expired=1';
+          }
           return Promise.reject(err);
         })
         .finally(() => {
           isRefreshing = false;
         });
+    }
+    else if (response?.status=== 409){
+          localStorage.removeItem('token');
+          // window.location.href = '/login?expired=1';
+          return Promise.reject(err);
     }
     return Promise.reject(err);
   }

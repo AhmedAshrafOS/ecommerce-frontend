@@ -1,26 +1,38 @@
-import React, { useContext } from 'react';
+import React, { useEffect,useState,useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 import ProductItem from '../components/ProductItem';
 import Title from '../components/Title';
+import axios, { HttpStatusCode } from 'axios';
 
 const categories = ['TABLETS', 'PHONES', 'WATCHES', 'LAPTOPS', 'TELEVISIONS', 'CAMERAS'];
 
 const Shop = () => {
-  const { products } = useContext(ShopContext);
+  const { backendUrl } = useContext(ShopContext);
   const navigate = useNavigate();
+  const [topProducts, setTopProducts] = useState({});
 
+    useEffect(() => {
+    categories.forEach(async (cat) => {
+      try {
+        const res = await axios.get(`${backendUrl}/products/category`, {
+          params: { category: cat, page: 0, size: 5 }
+        });
+        
+        setTopProducts(prev => ({ ...prev, [cat]: res.data.content }));
+      } catch (err) {
+        console.error(`Failed to load ${cat}`, err);
+      }
+    });
+
+  }, [backendUrl]);
   return (
     <div className="border-t pt-10 px-4 sm:px-10">
         <div className="text-left text-2xl py-2">
             <Title text1="EXPLORE" text2="CATEGORIES" />
         </div>
- 
+    
       {categories.map((category, index) => {
-        const categoryProducts = products
-          .filter((p) => p.category === category)
-          .slice(0, 5);
-
         return (
           <div key={index} className="my-12">
             <div className="flex justify-between items-center mb-6">
@@ -34,9 +46,9 @@ const Shop = () => {
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {categoryProducts.length > 0 ? (
-                categoryProducts.map((item, idx) => (
-                 <ProductItem key={index} id={item.productId} imageUrl={item.productImage.imageUrl} name={item.name} price={item.price} discountPercentage = {item.discountPercentage} />
+              {topProducts[category][0]  ? (
+                topProducts[category].map((item, idx) => (
+                 <ProductItem key={item.productId} id={item.productId} imageUrl={item.productImage.imageUrl} name={item.name} price={item.price} discountPercentage = {item.discountPercentage} />
 
                 ))
               ) : (
