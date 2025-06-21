@@ -1,53 +1,59 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import axios, { HttpStatusCode } from 'axios';
+import { HttpStatusCode } from 'axios';
 import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
-import api from '../api'
+import api from '../api';
 
 const OrderSuccess = () => {
   const { orderId } = useParams();
   const { backendUrl, token } = useContext(ShopContext);
   const [order, setOrder] = useState(null);
-  const [orderMessage, setOrderMessage] = useState("Loading your order...")
+  const [orderMessage, setOrderMessage] = useState("Loading your order...");
+
   useEffect(() => {
-    const fetchOrder = async () => {
+    const confirmAndFetch = async () => {
       try {
+        // ✅ Confirm the order after payment success
+        await api.put(`${backendUrl}/orders/${orderId}/confirm`, null, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
-    const res = await api.get(`${backendUrl}/orders/${orderId}`);
-
-          console.log(res);
-          
+        // ✅ Fetch order details
+        const res = await api.get(`${backendUrl}/orders/${orderId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
         if (res.status === HttpStatusCode.Ok) {
-                      
           setOrder(res.data);
         } else {
-          console.error(res.data.message);
+          setOrderMessage("Could not load order details.");
         }
       } catch (err) {
-
-        setOrderMessage("Order Not Found")
-        console.error('Failed to fetch order', err);
+        console.error("Error confirming or fetching order:", err);
+        setOrderMessage("Order confirmation failed or not found.");
       }
     };
 
-    fetchOrder();
+    confirmAndFetch();
   }, [backendUrl, orderId, token]);
 
   if (!order) {
-    return <p className="text-center mt-10">{orderMessage}</p>;
+    return <p className="text-center mt-10 text-gray-700">{orderMessage}</p>;
   }
 
   return (
-    <div className=" pt-14 px-4 sm:px-10 max-w-4xl mx-auto border-t">
-        <div className="text-2xl">
-            <Title text1="ORDER" text2="CONFIRMED 🎉" />
-            <p className="text-sm text-gray-600 mb-6">
-                Order ID: <span className="font-medium">{orderId}</span>
-            </p>
-        </div>
-
+    <div className="pt-14 px-4 sm:px-10 max-w-4xl mx-auto border-t">
+      <div className="text-2xl mb-4">
+        <Title text1="ORDER" text2="CONFIRMED 🎉" />
+        <p className="text-sm text-gray-600 mb-6">
+          Order ID: <span className="font-medium">{orderId}</span>
+        </p>
+      </div>
 
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-2">Delivery Info</h2>

@@ -70,7 +70,7 @@ const ShopContextProvider = (props) => {
 
     const updateProfile = async (updateDTO) => {
         try {
-        await api.patch(`${backendUrl}/customer/update`, updateDTO)
+        api.patch(`${backendUrl}/users/update`, updateDTO)
         toast.success("Profile updated");
         fetchProfile();
         } catch (err) {
