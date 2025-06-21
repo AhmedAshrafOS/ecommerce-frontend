@@ -20,7 +20,6 @@ const Login = () => {
   const [lockExpiry, setLockExpiry] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
 
-  // Handle session expired message
   useEffect(() => {
     const params = new URLSearchParams(search);
     if (params.get('expired')) {
@@ -28,7 +27,6 @@ const Login = () => {
     }
   }, [search]);
 
-  // Timer countdown for lockout
   useEffect(() => {
     if (!lockExpiry) return;
 
@@ -53,7 +51,6 @@ const Login = () => {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // Prevent resubmitting if still locked
     if (
       lockedUser &&
       lockedUser === credentials.usernameOrEmail.toLowerCase() &&
@@ -80,15 +77,17 @@ const Login = () => {
       const status = err.response?.status;
       const message = err.response?.data?.message || err.message;
 
+      
       if (status === HttpStatusCode.Locked) {
         // Account suspended
-        axios.post(`${backendUrl}/auth/request-password-reset?email=${credentials.usernameOrEmail.toLowerCase()}`);
-
-        toast.error('Account Suspended. Password reset email has been sent.');
+        toast.error('Account Suspended.Enter Email to reset your password.');
         setLockedUser(credentials.usernameOrEmail.toLowerCase());
         setLockExpiry(Date.now() + LOCK_DURATION_MS);
         setTimeLeft(60);
+        navigate("/forgetpassword") 
       } else {
+        console.log(message);
+        
         toast.error(message);
       }
     }
@@ -153,7 +152,7 @@ const Login = () => {
 
       <div className="flex flex-row justify-between items-center">
         <Link
-          to="/forgot-password"
+          to="/forgetpassword"
           className="text-red-600 text-sm hover:underline"
         >
           Forgot your password?

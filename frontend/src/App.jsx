@@ -22,6 +22,7 @@ import "react-toastify/dist/ReactToastify.css";
 import OrderSuccess from './pages/OrderSuccess';
 import CustomerProfile from './pages/CustomerProfile';
 import ResetPassword from './pages/ResetPassword';
+import ForgotPassword from './pages/ForgetPassword';
 const App = () => {
   return (
     <>
@@ -52,7 +53,7 @@ const App = () => {
         <Route path="/orders/:orderId" element={<OrderSuccess />} />
         <Route path="/profile" element={<CustomerProfile />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-
+        <Route path="/forgetpassword" element={<ForgotPassword />} />
       </Routes>
    
     </div>

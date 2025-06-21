@@ -19,6 +19,7 @@ axios.interceptors.response.use(
   res => res,
   err => {
     const { config, response } = err;
+    if(localStorage.getItem('token')&& localStorage.getItem('token') !== ''){
     if (response?.status === 401 && !config._retry) {
       config._retry = true;
 
@@ -31,7 +32,6 @@ axios.interceptors.response.use(
         });
       }
 
-                console.log("tesst");
       isRefreshing = true;
       
       return axios.post('http://localhost:8080/api/v1/auth/refresh',{}, { withCredentials: true })  // your refresh endpoint
@@ -58,10 +58,12 @@ axios.interceptors.response.use(
     }
     else if (response?.status=== 409){
           localStorage.removeItem('token');
-          // window.location.href = '/login?expired=1';
+          window.location.href = '/login?expired=1';
           return Promise.reject(err);
     }
     return Promise.reject(err);
+    }
+  return Promise.reject(err);
   }
 );
 
