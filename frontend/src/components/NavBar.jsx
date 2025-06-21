@@ -10,13 +10,14 @@ const NavBar = () => {
     const {setShowSearch, getCartCount, navigate, token, setToken, setCartItems,backendUrl} = useContext(ShopContext);
     const logout = async () => {
           try {
-            const resp = await api.post(
+            const resp = await axios.post(
               `${backendUrl}/auth/logout`);
+
           } 
           catch (err) {
             console.log('Error happend while delete refresh token', err);
           }
-          localStorage.removeItem('token')
+                        localStorage.removeItem('token')
           setToken('')
           setCartItems({})
           navigate('/login')

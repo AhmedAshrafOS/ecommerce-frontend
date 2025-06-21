@@ -46,7 +46,7 @@ axios.interceptors.response.use(
           return axios(config);
         })
         .catch(() => {
-          if(localStorage.getItem('token')){
+          if(localStorage.getItem('token')&& localStorage.getItem('token') !== ''){
             localStorage.removeItem('token');
             window.location.href = '/login?expired=1';
           }

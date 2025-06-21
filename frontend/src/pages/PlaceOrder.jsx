@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState,useEffect } from 'react';
 import Title from '../components/Title';
 import CartTotal from '../components/CartTotal';
 import { assets } from '../assets/assets';
@@ -10,88 +10,145 @@ import api from '../api'
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
-  const { backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products } = useContext(ShopContext);
+  const { backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products,customerProfile } = useContext(ShopContext);
   const [method, setMethod] = useState('cod');
-
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  const [useNewAddress, setUseNewAddress] = useState(false);
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
+    phone: '',
     street: '',
     city: '',
     governorate: '',
     buildingNumber: '',
     apartmentNumber: '',
     floor: '',
-    country: '',
-    phone: ''
+    country: ''
   });
+
+  
+
+  const loadAddressToForm = (address) => {
+    setFormData(prev => ({
+      ...prev,
+      street: address.street,
+      city: address.city,
+      governorate: address.governorate,
+      buildingNumber: address.buildingNumber,
+      apartmentNumber: address.apartmentNumber,
+      floor: address.floor,
+      country: address.country
+    }));
+  };
+
+  const handleAddressSelection = (addressId) => {
+    setSelectedAddressId(addressId);
+    if (addressId === '') {
+      setUseNewAddress(true);
+      setFormData(prev => ({
+        ...prev,
+        street: '',
+        city: '',
+        governorate: '',
+        buildingNumber: '',
+        apartmentNumber: '',
+        floor: '',
+        country: ''
+      }));
+    } else {
+      setUseNewAddress(false);
+      const selected = savedAddresses.find(addr => addr.addressId.toString() === addressId);
+      if (selected) {
+        loadAddressToForm(selected);
+      }
+    }
+  };
+
+  
+  useEffect(() => {
+      try {
+        setFormData(prev => ({
+          ...prev,
+          firstName: customerProfile.firstName,
+          lastName: customerProfile.lastName,
+          email: customerProfile.email,
+          phone: customerProfile.phoneNumber
+        }));
+        setSavedAddresses(customerProfile.addresses || []);
+
+        const primary = customerProfile.addresses?.find(addr => addr.primary);
+        if (primary) {
+          setSelectedAddressId(primary.addressId.toString());
+          loadAddressToForm(primary);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load user profile");
+      }
+  }, []);
+
+
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setFormData((data) => ({ ...data, [name]: value }));
   };
 
-const onSubmitHandler = async (event) => {
-  event.preventDefault();
-
-  try {
-    if (method !== 'cod') {
-           let orderItems = [];
 
 
-    Object.keys(cartItems).forEach((itemId) => {
-      if (cartItems[itemId].quantity > 0) {
-        const itemInfo = structuredClone(products.find(product => product._id === itemId));
-        if (itemInfo) {
-          itemInfo.quantity = cartItems[itemId].quantity;
-          orderItems.push(itemInfo);
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+
+    try {
+      if (method !== 'cod') {
+
+      const response = await api.post(`${backendUrl}/orders`, {
+        address: formData,
+        paymentMethod: method,
+        currency: 'usd',
+        email: formData.email,
+      });
+
+      
+      if (response.status ===HttpStatusCode.Created &&response.data) {
+        if ( response.data.checkoutUrl) {
+          window.location.href = response.data.checkoutUrl; // redirect to gateway
+        } else {
+          toast.error(response.data.message || 'Payment initialization failed');
         }
       }
-    });
-
-    const responseOne = await api.post(`${backendUrl}/orders`, {
-      address: formData,
-      paymentMethod: method,
-      currency: 'usd',
-      email: formData.email,
-    });
-    console.log(responseOne.data);
-    
-    if (responseOne.status ===HttpStatusCode.Created &&responseOne.data) {
-      if ( responseOne.data.checkoutUrl) {
-        window.location.href = responseOne.data.checkoutUrl; // redirect to gateway
-      } else {
-        toast.error(responseOne.data.message || 'Payment initialization failed');
+        return; // stop here if payment method is not cod
       }
-    }
-      return; // stop here if payment method is not cod
-    }
 
     // ========== COD FLOW ==========
- 
+  
 
-    const orderData = {
-      address: formData,
-      items: orderItems,
-      amount: getCartAmount() + delivery_fee,
-      method
-    };
+      const orderData = {
+        address: formData,
+        // items: orderItems,
+        amount: getCartAmount() + delivery_fee,
+        method
+      };
 
-    const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
-      headers: { token }
-    });
+      const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
+        headers: { token }
+      });
 
-    if (response.data.success && response.data.orderId) {
-      navigate(`/orders/${response.data.orderId}`);
-    } else {
-      toast.error(response.data.message);
+      if (response.data.success && response.data.orderId) {
+        navigate(`/orders/${response.data.orderId}`);
+      } else {
+        toast.error(response.data.message);
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'Something went wrong');
     }
-
-  } catch (error) {
-    console.error(error);
-    toast.error(error.message || 'Something went wrong');
-  }
-};
+  };
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
@@ -99,11 +156,31 @@ const onSubmitHandler = async (event) => {
         <div className='text-xl sm:text-2xl my-3'>
           <Title text1={'DELIVERY'} text2={'INFORMATION'} />
         </div>
+
         <div className='flex gap-3'>
           <input required onChange={onChangeHandler} name='firstName' value={formData.firstName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='First name' />
           <input required onChange={onChangeHandler} name='lastName' value={formData.lastName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Last name' />
         </div>
         <input required onChange={onChangeHandler} name='email' value={formData.email} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="email" placeholder='Email address' />
+        <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="tel" placeholder='Phone' />
+
+        <div className='mt-4'>
+          <label className='block text-sm font-medium text-gray-700 mb-2'>Select Delivery Address</label>
+          <select
+            value={selectedAddressId}
+            onChange={(e) => handleAddressSelection(e.target.value)}
+            className='border border-gray-300 rounded py-1.5 px-3.5 w-full mb-3'
+          >
+            <option value="">Enter new address</option>
+            {savedAddresses.map((address) => (
+              <option key={address.addressId} value={address.addressId}>
+                {address.street}, Building {address.buildingNumber}, {address.city}
+                {address.primary ? ' (Primary)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <input required onChange={onChangeHandler} name='street' value={formData.street} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Street' />
         <div className='flex gap-3'>
           <input required onChange={onChangeHandler} name='city' value={formData.city} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='City' />
@@ -114,11 +191,11 @@ const onSubmitHandler = async (event) => {
           <input required onChange={onChangeHandler} name='apartmentNumber' value={formData.apartmentNumber} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Apartment Number' />
         </div>
         <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='floor' value={formData.floor} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='floor' />
+          <input required onChange={onChangeHandler} name='floor' value={formData.floor} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Floor' />
           <input required onChange={onChangeHandler} name='country' value={formData.country} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Country' />
         </div>
-        <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
       </div>
+
       <div className='mt-8'>
         <div className='mt-8 min-w-80'>
           <CartTotal />
@@ -128,11 +205,11 @@ const onSubmitHandler = async (event) => {
           <div className='flex gap-3 flex-col lg:flex-row'>
             <div onClick={() => setMethod('STRIPE')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'STRIPE' ? 'bg-green-400' : ''}`}></p>
-              <img className={`h-5 mx-4`} src={assets.stripe_logo} alt="Stripe" />
+              <img className='h-5 mx-4' src={assets.stripe_logo || "/placeholder.svg"} alt="Stripe" />
             </div>
             <div onClick={() => setMethod('PAYMOB')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'PAYMOB' ? 'bg-green-400' : ''}`} ></p>
-              <img className={`h-5 mx-4`} src={assets.paymob_logo} alt="Paymob" />
+              <img className='h-5 mx-4' src={assets.paymob_logo || "/placeholder.svg"} alt="Paymob" />
             </div>
             <div onClick={() => setMethod('COD')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'COD' ? 'bg-green-400' : ''}`}></p>
@@ -140,12 +217,10 @@ const onSubmitHandler = async (event) => {
             </div>
           </div>
           <div className='w-full text-end mt-8'>
-            <button type='submit' 
-                        className="relative group overflow-hidden bg-black text-white text-sm my-8 px-8 py-3"
-          >
-            <span className="absolute inset-0 bg-red-600 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></span>
-            <span className="relative z-10">PROCEED TO CHECKOUT</span>
-          </button>
+            <button type='submit' className="relative group overflow-hidden bg-black text-white text-sm my-8 px-8 py-3">
+              <span className="absolute inset-0 bg-red-600 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></span>
+              <span className="relative z-10">PROCEED TO CHECKOUT</span>
+            </button>
           </div>
         </div>
       </div>

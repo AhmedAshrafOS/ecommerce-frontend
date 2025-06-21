@@ -21,14 +21,14 @@ import { ToastContainer, toast ,Slide} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import OrderSuccess from './pages/OrderSuccess';
 import CustomerProfile from './pages/CustomerProfile';
-
+import ResetPassword from './pages/ResetPassword';
 const App = () => {
   return (
     <>
         <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <ToastContainer
         position="top-center"
-        autoClose={2000}
+        autoClose={3000}
         closeOnClick
         transition={Slide} 
       />
@@ -51,6 +51,8 @@ const App = () => {
         <Route path="/search-results" element={<SearchResults />} />
         <Route path="/orders/:orderId" element={<OrderSuccess />} />
         <Route path="/profile" element={<CustomerProfile />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
       </Routes>
    
     </div>

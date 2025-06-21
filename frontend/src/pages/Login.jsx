@@ -82,6 +82,8 @@ const Login = () => {
 
       if (status === HttpStatusCode.Locked) {
         // Account suspended
+        axios.post(`${backendUrl}/auth/request-password-reset?email=${credentials.usernameOrEmail.toLowerCase()}`);
+
         toast.error('Account Suspended. Password reset email has been sent.');
         setLockedUser(credentials.usernameOrEmail.toLowerCase());
         setLockExpiry(Date.now() + LOCK_DURATION_MS);
