@@ -11,7 +11,7 @@ const ShopContextProvider = (props) => {
 
     const currency = '$';
     const delivery_fee = 10;
-    const backendUrl = "http://localhost:8080/api/v1";
+    const backendUrl = "http://localhost:8080/ecommerce-service/api/v1";
 
     const navigate = useNavigate();
     const [token, setToken] = useState('');
@@ -357,7 +357,7 @@ const ShopContextProvider = (props) => {
             toast.error('Failed to load wishlist')
         }
     };
-    
+
     const value = {
         getCategoryProducts,
         products, currency, delivery_fee,

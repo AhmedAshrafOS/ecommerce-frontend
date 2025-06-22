@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 // 1) create an axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api/v1',
+  baseURL: 'http://localhost:8080/ecommerce-service/api/v1',
   withCredentials: true,
 });
 
