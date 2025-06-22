@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { assets } from '../assets/assets';
 import axios from 'axios';
+import api from '../api';
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify';
 
@@ -48,15 +49,9 @@ const Add = ({token}) => {
         formData.append("imagesUrls", image);
       });
       
-      const response = await a.post(
+      const response = await api.post(
         `${backendUrl}api/v1/products`,
-        formData,
-        {
-            headers: {
-              'Content-Type': 'multipart/form-data',  
-              Authorization: `Bearer ${token}`
-            }
-        }
+        formData
       );
       if(response.status === 201){
         toast.success("Product added successfully")
