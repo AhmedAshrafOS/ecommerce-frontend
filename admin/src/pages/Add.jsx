@@ -48,7 +48,7 @@ const Add = ({token}) => {
         formData.append("imagesUrls", image);
       });
       
-      const response = await axios.post(
+      const response = await a.post(
         `${backendUrl}api/v1/products`,
         formData,
         {

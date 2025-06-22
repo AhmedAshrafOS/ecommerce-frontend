@@ -10,6 +10,7 @@ export default function CustomerProfile() {
     updateProfile,
     createAddress,
     deleteAddress,
+    fetchProfile,
   } = useContext(ShopContext);
 
   const [profileForm, setProfileForm] = useState({
@@ -75,6 +76,7 @@ export default function CustomerProfile() {
       country: "",
       isPrimary: false,
     });
+    fetchProfile(); 
   };
   const onDeleteAddress = () => {
     const idx = addresses.findIndex((a) => a.addressId === selectedAddressId);
@@ -187,7 +189,7 @@ export default function CustomerProfile() {
           <div className="flex flex-wrap items-center gap-4">
             <select
               value={selectedAddressId}
-              onChange={(e) => setSelectedAddressId(e.target.value)}
+              onChange={(e) => setSelectedAddressId(e.target.key)}
               className="border rounded px-3 py-2 focus:outline-none"
             >
               {addresses.map((a) => (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios';
+import api from '../api'
 import { backendUrl } from '../App'
 import { toast ,Slide} from 'react-toastify';
 import { getUserRoleFromToken } from '../utils/jwtHelper';
@@ -9,7 +10,7 @@ const Login = ({setToken,setUserRole}) => {
     const onSubmitHandler = async (e) =>{
         try{
             e.preventDefault();
-            const response = await axios.post(backendUrl + 'api/v1/auth/login', {
+            const response = await api.post(backendUrl + 'api/v1/auth/login', {
                 usernameOrEmail: email,
                 password: password
             

@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios, { HttpStatusCode } from 'axios';
+import api from '../api';
 import { toast } from 'react-toastify';
 import { ShopContext } from '../context/ShopContext';
 
@@ -61,7 +62,7 @@ const Login = () => {
     }
 
     try {
-      const resp = await axios.post(`${backendUrl}/auth/login`, credentials);
+      const resp = await api.post(`${backendUrl}/auth/login`, credentials);
 
       if (resp.status === HttpStatusCode.Ok) {
         const token = resp.data.token;

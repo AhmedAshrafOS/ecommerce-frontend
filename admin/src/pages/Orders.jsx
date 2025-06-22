@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios, { HttpStatusCode } from 'axios';
+import api from '../api';
 import { backendUrl, currency } from '../App';
 import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
@@ -13,10 +14,7 @@ const Orders = ({ token }) => {
     if (!token) return;
 
     try {
-      const response = await axios.get(`${backendUrl}api/v1/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { page: currentPage, size: 5 }
-      });
+      const response = await api.get(`${backendUrl}api/v1/orders`);
 
       if (response.status === HttpStatusCode.Ok) {
         const content = response.data.content;
@@ -40,10 +38,8 @@ const Orders = ({ token }) => {
 
   const statusHandler = async (event, orderId) => {
     try {
-      const response = await axios.patch(
-        `${backendUrl}api/v1/orders/${orderId}?orderStatus=${event.target.value}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.patch(
+        `${backendUrl}api/v1/orders/${orderId}?orderStatus=${event.target.value}`
       );
       if (response.status === HttpStatusCode.NoContent) {
         toast.success('Order status updated');
