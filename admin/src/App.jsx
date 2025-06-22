@@ -13,7 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
-export const backendUrl = "http://localhost:8080/"; // Update this to your backend URL
+export const backendUrl = "http://localhost:8080/ecommerce-service/"; // Update this to your backend URL
 console.log("Backend URL:", backendUrl);
 export const currency = '$';
 

@@ -34,7 +34,7 @@ axios.interceptors.response.use(
 
       isRefreshing = true;
       
-      return axios.post('http://localhost:8080/api/v1/auth/refresh',{}, { withCredentials: true })  // your refresh endpoint
+      return axios.post('http://localhost:8080/ecommerce-service/api/v1/auth/refresh',{}, { withCredentials: true })  // your refresh endpoint
         .then(({ data }) => {
           const newToken = data.token;
 
