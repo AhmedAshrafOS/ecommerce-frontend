@@ -21,18 +21,13 @@ export default function CustomerProfile() {
     phone: "",
   });
 
-  const [selectedAddressId, setSelectedAddressId] = useState("");
-  const [newAddress, setNewAddress] = useState({
-    street: "",
-    city: "",
-    governorate: "",
-    buildingNumber: "",
-    apartmentNumber: "",
-    floor: "",
-    country: "",
-    isPrimary: false,
-  });
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    street: "", city: "", governorate: "",
+    buildingNumber: "", apartmentNumber: "",
+    floor: "", country: "", isPrimary: false
+  });
 
   // password form
   const [pwForm, setPwForm] = useState({
@@ -51,7 +46,8 @@ export default function CustomerProfile() {
       lastName: customerProfile.lastName,
       phone: customerProfile.phoneNumber,
     });
-    setSelectedAddressId(customerProfile.addresses[0]?.addressId || "");
+    if (!customerProfile?.addresses?.length) return;
+    setSelectedAddressId(customerProfile.addresses[0].addressId);
   }, [customerProfile, addresses]);
 
   const onProfileChange = (f, v) => {
@@ -63,24 +59,25 @@ export default function CustomerProfile() {
 
   const onAddressChange = (f, v) =>
     setNewAddress((a) => ({ ...a, [f]: v }));
+
   const onAddAddress = () => {
     createAddress(newAddress);
     setIsAdding(false);
     setNewAddress({
-      street: "",
-      city: "",
-      governorate: "",
-      buildingNumber: "",
-      apartmentNumber: "",
-      floor: "",
-      country: "",
-      isPrimary: false,
+      street: "", city: "", governorate: "",
+      buildingNumber: "", apartmentNumber: "",
+      floor: "", country: "", isPrimary: false
     });
-    fetchProfile(); 
+    fetchProfile();
   };
   const onDeleteAddress = () => {
-    const idx = addresses.findIndex((a) => a.addressId === selectedAddressId);
-    deleteAddress(selectedAddressId, idx);
+    deleteAddress(selectedAddressId);
+    // optimistically remove
+    setSelectedAddressId(prev => {
+      const remaining = addresses.filter(a => a.addressId !== prev);
+      return remaining[0]?.addressId ?? null;
+    });
+    fetchProfile();
   };
 
   const onPwChange = (f, v) => setPwForm((p) => ({ ...p, [f]: v }));
@@ -188,13 +185,13 @@ export default function CustomerProfile() {
         <div className="p-4 space-y-4">
           <div className="flex flex-wrap items-center gap-4">
             <select
-              value={selectedAddressId}
-              onChange={(e) => setSelectedAddressId(e.target.key)}
+              value={selectedAddressId ?? ""}
+              onChange={e => setSelectedAddressId(Number(e.target.value))}
               className="border rounded px-3 py-2 focus:outline-none"
             >
-              {addresses.map((a) => (
+              {addresses.map(a => (
                 <option key={a.addressId} value={a.addressId}>
-                  {a.addressId} — {a.street}, {a.city}
+                  {a.label} — {a.street}, {a.city}
                 </option>
               ))}
             </select>
@@ -225,15 +222,13 @@ export default function CustomerProfile() {
                     "floor",
                     "apartmentNumber",
                     "country",
-                  ].map((f) => (
+                  ].map(f => (
                     <div key={f} className="space-y-1">
-                      <label className="block text-sm font-medium">
-                        {f}
-                      </label>
+                      <label className="block text-sm font-medium">{f}</label>
                       <input
                         value={newAddress[f]}
-                        onChange={(e) =>
-                          onAddressChange(f, e.target.value)
+                        onChange={e =>
+                          setNewAddress(n => ({ ...n, [f]: e.target.value }))
                         }
                         className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
                       />
@@ -243,8 +238,8 @@ export default function CustomerProfile() {
                     <input
                       type="checkbox"
                       checked={newAddress.isPrimary}
-                      onChange={(e) =>
-                        onAddressChange("isPrimary", e.target.checked)
+                      onChange={e =>
+                        setNewAddress(n => ({ ...n, isPrimary: e.target.checked }))
                       }
                       className="rounded focus:ring"
                     />
@@ -269,15 +264,15 @@ export default function CustomerProfile() {
             </div>
           )}
 
-          {/* Selected Address */}
-          {selectedAddressId && (
+          {/* Selected Address Details */}
+          {selectedAddressId != null && (
             <div className="p-4 border rounded-md bg-gray-50 space-y-2">
               {(() => {
-                const a = addresses.find(
-                  (x) => x.addressId === selectedAddressId
-                );
-                return a ? (
+                const a = addresses.find(x => x.addressId === selectedAddressId);
+                if (!a) return <p className="text-gray-500">Address not found</p>;
+                return (
                   <>
+                    <p className="font-medium">{a.label}</p>
                     <p>
                       {a.street}, Bldg {a.buildingNumber}, Floor {a.floor}, Apt{" "}
                       {a.apartmentNumber}
@@ -294,12 +289,13 @@ export default function CustomerProfile() {
                       </button>
                     </div>
                   </>
-                ) : null;
+                );
               })()}
             </div>
           )}
         </div>
       </section>
+
 
       {/* Change Password */}
       <section className="bg-white border rounded-lg shadow-sm">
