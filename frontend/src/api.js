@@ -34,13 +34,14 @@ api.interceptors.response.use(
   err => {
     const { response, config } = err;
     const originalRequest = config;
-    if (!response ||  response?.status=== 409){
-          localStorage.removeItem('token');
-          window.location.href = '/login?expired=1';
-          return Promise.reject(err);
-    }
+    // if (!response ||  response?.status=== 409){
+    //       localStorage.removeItem('token');
+    //       // window.location.href = '/login?expired=1';
+    //       return Promise.reject(err);
+    // }
     // if no response / not HTTP or not 401, just bail
-    if (!response || response.status !== 401) {
+    if (!response || response.status !== 401 || response.status !== 403) {
+    console.log("=========== Test 1 ===========");
       return Promise.reject(err);
     }
 
@@ -50,7 +51,7 @@ api.interceptors.response.use(
       originalRequest._retry
     ) {
       localStorage.removeItem('token');
-      window.location.href = '/login?expired=1';
+      // window.location.href = '/login?expired=1';
       return Promise.reject(err);
     }
 
@@ -89,7 +90,7 @@ api.interceptors.response.use(
         .catch(refreshError => {
           // refresh failed: force logout
           localStorage.removeItem('token');
-          window.location.href = '/login?expired=1';
+          // window.location.href = '/login?expired=1';
           reject(refreshError);
         })
         .finally(() => {
