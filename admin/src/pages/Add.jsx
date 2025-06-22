@@ -16,8 +16,7 @@ const Add = ({token}) => {
   const [price, setPrice] = useState("");
   const [stockQuantity, setStockQuantity] = useState("");
   const [category, setCategory] = useState("Tablets")
-  const [brand, setBrand] = useState("Topwear")
-  const [bestseller, setBestseller] = useState(false)
+  const [brand, setBrand] = useState("Apple")
 
   const categoryFilters = {
         Tablets: ['Apple', 'Samsung', 'Xiaomi', 'Oppo'],
@@ -43,7 +42,6 @@ const Add = ({token}) => {
       formData.append("stockQuantity", stockQuantity)
       formData.append("category", category.toUpperCase())
       formData.append("brandName", brand)
-      formData.append("bestseller", bestseller)
       formData.append("lowStockThreshold", 5)
       
     imagesUrls.forEach(image => {
@@ -54,10 +52,10 @@ const Add = ({token}) => {
         `${backendUrl}api/v1/products`,
         formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
+            headers: {
+              'Content-Type': 'multipart/form-data',  
+              Authorization: `Bearer ${token}`
+            }
         }
       );
       if(response.status === 201){
@@ -150,10 +148,7 @@ const Add = ({token}) => {
       </div>
     </div>
 
-    <div className='flex gap-2 mt-2'>
-        <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller'/>
-        <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
-      </div>
+
     <button className='w-28 py-3 mt-4 bg-black text-white over'>ADD</button>
 
     </form>

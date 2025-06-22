@@ -2,7 +2,7 @@ import axios, { HttpStatusCode } from 'axios';
 import { backendUrl, currency } from '../App';
 import { toast } from 'react-toastify';
 import { useState, useEffect } from 'react';
-
+import api from '../api'
 const List = ({ token }) => {
   const [list, setList] = useState([]);
   const [page, setPage] = useState(0); // current page
@@ -10,10 +10,8 @@ const List = ({ token }) => {
 
   const fetchList = async () => {
     try {
-      const response = await axios.get(backendUrl + 'api/v1/products', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await api.get(backendUrl + 'api/v1/products', {
+
         params: {
           page: page,
           size: 5,

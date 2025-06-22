@@ -1,5 +1,6 @@
 // Refactored Admin Management UI
 import React, { useState, useEffect } from 'react';
+import api from '../api'
 import axios, { HttpStatusCode } from 'axios';
 import { toast } from 'react-toastify';
 import { backendUrl } from '../App';
@@ -26,9 +27,7 @@ const Admin = () => {
 
   const fetchAdmins = async () => {
     try {
-      const response = await axios.get(`${backendUrl}api/v1/users/admins`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`${backendUrl}api/v1/users/admins`)
   
       if (response.status === HttpStatusCode.Ok) {
         
@@ -40,7 +39,9 @@ const Admin = () => {
       }
    
     } catch (error) {
-      toast.error('Failed to fetch admins');
+      const err = Object.values(error.response?.data)[0];
+
+      toast.error(err|| error.message);
     }
   };
 
@@ -61,7 +62,9 @@ const Admin = () => {
       }
 
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create admin');
+      const err = Object.values(error.response?.data)[0];
+
+      toast.error(err|| error.message);
     }
   };
 
@@ -76,7 +79,7 @@ const Admin = () => {
           return;
         }
 
-      const response = await axios.put(
+      const response = await axios.patch(
         `${backendUrl}api/v1/users/${selectedAdmin.userId}`,
         { email, username, oldPassword, newPassword, confirmPassword },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -147,7 +150,7 @@ const Admin = () => {
 
       {admins.map((admin) => (
         <div
-          key={admin.id}
+          key={admin.userId}
           className="border p-4 mb-2 rounded flex justify-between items-center"
         >
           <div>
