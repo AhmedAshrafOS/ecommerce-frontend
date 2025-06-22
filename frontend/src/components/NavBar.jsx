@@ -20,7 +20,7 @@ const NavBar = () => {
                         localStorage.removeItem('token')
           setToken('')
           setCartItems({})
-          navigate('/login')
+          window.location.href = '/login'
     }
 
   return (

@@ -11,10 +11,11 @@ import api from '../api'
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const { backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products,customerProfile } = useContext(ShopContext);
-  const [method, setMethod] = useState('cod');
+  const [method, setMethod] = useState('STRIPE');
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [useNewAddress, setUseNewAddress] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -106,14 +107,22 @@ const PlaceOrder = () => {
     try {
       if (method !== 'cod') {
 
-      const response = await api.post(`${backendUrl}/orders`, {
+      const registerPromise =  api.post(`${backendUrl}/orders`, {
         address: formData,
         paymentMethod: method,
         currency: 'usd',
         email: formData.email,
       });
+        toast.promise(
+          registerPromise,
+          {
+            pending: 'Procceding to checkout...',
+            success: 'Redirecting..',
+          }
+        );
+        setIsSubmitting(true)
 
-      
+      const response = await registerPromise
       if (response.status ===HttpStatusCode.Created &&response.data) {
         if ( response.data.checkoutUrl) {
           window.location.href = response.data.checkoutUrl; // redirect to gateway
@@ -121,6 +130,7 @@ const PlaceOrder = () => {
           toast.error(response.data.message || 'Payment initialization failed');
         }
       }
+       setIsSubmitting(false)
         return; // stop here if payment method is not cod
       }
 
@@ -216,10 +226,14 @@ const PlaceOrder = () => {
               <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
             </div>
           </div>
+
           <div className='w-full text-end mt-8'>
-            <button type='submit' className="relative group overflow-hidden bg-black text-white text-sm my-8 px-8 py-3">
-              <span className="absolute inset-0 bg-red-600 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></span>
-              <span className="relative z-10">PROCEED TO CHECKOUT</span>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="text-sm my-8 px-8 py-3 bg-black text-white hover:bg-red-600 transition disabled:bg-gray-500"
+            >
+              PROCEED TO CHECKOUT
             </button>
           </div>
         </div>

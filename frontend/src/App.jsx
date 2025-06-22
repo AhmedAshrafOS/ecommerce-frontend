@@ -23,6 +23,8 @@ import OrderSuccess from './pages/OrderSuccess';
 import CustomerProfile from './pages/CustomerProfile';
 import ResetPassword from './pages/ResetPassword';
 import ForgotPassword from './pages/ForgetPassword';
+import OrderPass from './pages/OrderPass'
+import OrderFail from './pages/OrderFail'
 const App = () => {
   return (
     <>
@@ -51,6 +53,8 @@ const App = () => {
         <Route path="/shop" element={<Shop />} />
         <Route path="/search-results" element={<SearchResults />} />
         <Route path="/orders/:orderId" element={<OrderSuccess />} />
+        <Route path="/orders/success/:orderId" element={<OrderPass />} />
+        <Route path="/orders/failed/:orderId"  element={<OrderFail />} />
         <Route path="/profile" element={<CustomerProfile />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/forgetpassword" element={<ForgotPassword />} />

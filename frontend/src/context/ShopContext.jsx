@@ -68,9 +68,10 @@ const ShopContextProvider = (props) => {
         }
     };
 
+
     const updateProfile = async (updateDTO) => {
         try {
-        await api.patch(`${backendUrl}/customer/update`, updateDTO)
+        await api.patch(`${backendUrl}/users/update`, updateDTO)
         toast.success("Profile updated");
         fetchProfile();
         } catch (err) {
@@ -81,7 +82,7 @@ const ShopContextProvider = (props) => {
 
     const createAddress = async (addressReq) => {
         try {
-        await api.post(`${backendUrl}/addresses`, addressReq);
+        await api.post(`${backendUrl}/address`, addressReq);
         toast.success("Address added");
         fetchProfile();
         } catch (err) {
@@ -89,12 +90,10 @@ const ShopContextProvider = (props) => {
         toast.error("Failed to add address");
         }
     };
-    const deleteAddress = async (addressId, index) => {
+    const deleteAddress = async (addressId) => {
         try {
-        await api.get(
-            `${backendUrl}/addresses/${addressId}?addressIndex=${index}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.delete(
+            `${backendUrl}/address/${addressId}`)
         toast.success("Address removed");
         fetchProfile();
         } catch (err) {
@@ -346,19 +345,19 @@ const ShopContextProvider = (props) => {
     const getWishlist = async () => {
         if (!token) return
         try {
-            const res = await axios.get(
+            const res = await api.get(
             `${backendUrl}/wishlist` 
             )
             if (res.status === 200) {
             setWishlistData(res.data)
             }
         }
-        catch{
+        catch(err){
             console.error('getWishlist error', err)
             toast.error('Failed to load wishlist')
-            throw err
         }
     };
+    
     const value = {
         getCategoryProducts,
         products, currency, delivery_fee,

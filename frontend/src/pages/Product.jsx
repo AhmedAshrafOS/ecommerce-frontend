@@ -23,12 +23,12 @@ const Product = () => {
         const resp = await axios.get(
           `${backendUrl}/products/${productId}`
         );
-        const data = resp.data; // ProductResponseDetailsDTO
-          console.log(resp.data);
+        const data = resp.data; 
           
         setProductData(data);
+        
         setImage(data.productImages[0]?.imageUrl || '');
-        // preload related products
+
         getCategoryProducts(data.category);
       } catch (err) {
         console.error('Failed to fetch product details', err);

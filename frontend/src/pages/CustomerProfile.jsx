@@ -10,7 +10,6 @@ export default function CustomerProfile() {
     updateProfile,
     createAddress,
     deleteAddress,
-    changePassword,            // assume you add this in ShopContext
   } = useContext(ShopContext);
 
   const [profileForm, setProfileForm] = useState({
@@ -23,7 +22,6 @@ export default function CustomerProfile() {
 
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [newAddress, setNewAddress] = useState({
-    label: "",
     street: "",
     city: "",
     governorate: "",
@@ -42,7 +40,7 @@ export default function CustomerProfile() {
     confirmPassword: "",
   });
 
-  // populate when profile loads
+
   useEffect(() => {
     if (!customerProfile) return;
     setProfileForm({
@@ -68,7 +66,6 @@ export default function CustomerProfile() {
     createAddress(newAddress);
     setIsAdding(false);
     setNewAddress({
-      label: "",
       street: "",
       city: "",
       governorate: "",
@@ -90,7 +87,7 @@ export default function CustomerProfile() {
       toast.error("Passwords do not match");
       return;
     }
-    changePassword(pwForm.oldPassword, pwForm.newPassword);
+    updateProfile(pwForm);
     setPwForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
   };
 
@@ -115,9 +112,8 @@ export default function CustomerProfile() {
               <label className="block text-sm font-medium">Username</label>
               <input
                 type="text"
-                readOnly
                 value={profileForm.username}
-                className="w-full border bg-gray-100 rounded px-3 py-2 cursor-not-allowed"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
               />
             </div>
             {/* Email (read-only) */}
@@ -125,9 +121,8 @@ export default function CustomerProfile() {
               <label className="block text-sm font-medium">Email</label>
               <input
                 type="email"
-                readOnly
                 value={profileForm.email}
-                className="w-full border bg-gray-100 rounded px-3 py-2 cursor-not-allowed"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
               />
             </div>
             {/* First Name */}
@@ -195,7 +190,7 @@ export default function CustomerProfile() {
             >
               {addresses.map((a) => (
                 <option key={a.addressId} value={a.addressId}>
-                  {a.label} — {a.street}, {a.city}
+                  {a.addressId} — {a.street}, {a.city}
                 </option>
               ))}
             </select>
@@ -219,7 +214,6 @@ export default function CustomerProfile() {
                 <h3 className="text-lg font-medium">Add New Address</h3>
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {[
-                    "label",
                     "street",
                     "city",
                     "governorate",
@@ -280,7 +274,6 @@ export default function CustomerProfile() {
                 );
                 return a ? (
                   <>
-                    <p className="font-medium">{a.label}</p>
                     <p>
                       {a.street}, Bldg {a.buildingNumber}, Floor {a.floor}, Apt{" "}
                       {a.apartmentNumber}

@@ -16,11 +16,8 @@ const OrderSuccess = () => {
 
     const res = await api.get(`${backendUrl}/orders/${orderId}`);
 
-          console.log(res);
-          
-
         if (res.status === HttpStatusCode.Ok) {
-                      
+
           setOrder(res.data);
         } else {
           console.error(res.data.message);
