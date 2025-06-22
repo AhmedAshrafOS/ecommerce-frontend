@@ -87,12 +87,20 @@ const Cart = () => {
         <div className='w-full sm:w-[450px]'>
           <CartTotal />
           <div className='w-full text-end'>
+            {cartData.length === 0 && (
+              <p className="text-red-500 text-sm mb-2">
+                Your cart is empty. Please add items before proceeding to checkout.
+              </p>)}
             <button
               onClick={() => {
                 if (!token) {
                   navigate('/login');
                   toast.info('Please log in to proceed to checkout.');
                 } else {
+                  if (cartData.length === 0) {
+                  toast.error('Your cart is empty. Please add items before proceeding to checkout.');
+                  return;
+                }
                   navigate('/place-order');
                 }
               }}

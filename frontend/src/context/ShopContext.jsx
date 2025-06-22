@@ -117,10 +117,15 @@ const ShopContextProvider = (props) => {
                 } else {
                     toast.error(response.data.message);
                 }
-            } catch (error) {
+            } 
+            catch (error) {
+                // console.error(error);
+                // toast.error(error.message);
                 console.error(error);
-                toast.error(error.message);
+                const errMsg = error?.response?.data?.message || error.message || 'Something went wrong';
+                toast.error(errMsg);
             }
+
         } 
         else {
             if (cartData[itemId]?.quantity) {
@@ -174,8 +179,11 @@ const ShopContextProvider = (props) => {
                 }
             }
             catch (error) {
-                console.log(error);
-                toast.error(error.message)
+                // console.log(error);
+                // toast.error(error.message)
+                console.error(error);
+                const errMsg = error?.response?.data?.message || error.message || 'Something went wrong';
+                toast.error(errMsg);
             }
         }else{
         cartData[itemId].quantity = quantity;

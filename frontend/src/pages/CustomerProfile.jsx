@@ -17,7 +17,7 @@ export default function CustomerProfile() {
     email: "",
     firstName: "",
     lastName: "",
-    phoneNumber: "",
+    phone: "",
   });
 
   const [selectedAddressId, setSelectedAddressId] = useState("");
@@ -48,7 +48,7 @@ export default function CustomerProfile() {
       email: customerProfile.email,
       firstName: customerProfile.firstName,
       lastName: customerProfile.lastName,
-      phoneNumber: customerProfile.phoneNumber,
+      phone: customerProfile.phoneNumber,
     });
     setSelectedAddressId(customerProfile.addresses[0]?.addressId || "");
   }, [customerProfile, addresses]);
@@ -107,21 +107,23 @@ export default function CustomerProfile() {
         </div>
         <div className="p-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
-            {/* Username (read-only) */}
+            {/* Username (editable) */}
             <div className="space-y-1">
               <label className="block text-sm font-medium">Username</label>
               <input
                 type="text"
                 value={profileForm.username}
+                onChange={(e) => onProfileChange("username", e.target.value)}
                 className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
               />
             </div>
-            {/* Email (read-only) */}
+            {/* Email (editable) */}
             <div className="space-y-1">
               <label className="block text-sm font-medium">Email</label>
               <input
                 type="email"
                 value={profileForm.email}
+                onChange={(e) => onProfileChange("email", e.target.value)}
                 className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
               />
             </div>
@@ -156,9 +158,9 @@ export default function CustomerProfile() {
               </label>
               <input
                 type="text"
-                value={profileForm.phoneNumber}
+                value={profileForm.phone}
                 onChange={(e) =>
-                  onProfileChange("phoneNumber", e.target.value)
+                  onProfileChange("phone", e.target.value)
                 }
                 className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
               />

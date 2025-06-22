@@ -94,6 +94,8 @@ const Product = () => {
               <img key={i} src={assets.star_icon} className="w-3.5" alt="Star" />
             ))}
             <img src={assets.star_dull_icon} className="w-3.5" alt="Dull Star" />
+            <p className="pl-2">{productData.averageRating}</p>
+            <br />
             <p className="pl-2">{productData.reviewCount}</p>
           </div>
           <p className="mt-5 text-3xl font-medium">

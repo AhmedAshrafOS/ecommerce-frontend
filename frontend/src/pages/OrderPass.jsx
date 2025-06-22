@@ -14,11 +14,11 @@ const OrderPass = () => {
     const markReadyAndClearCart = async () => {
       try {
         // 1) mark order READY_FOR_DELIVERY
-        await api.patch(
-          `${backendUrl}/orders/${orderId}?orderStatus=READY_FOR_DELIVERY`
+        await api.put(
+          `${backendUrl}/orders/${orderId}/confirm`
         );
         // 2) clear their cart
-        await api.delete(`${backendUrl}/cartItems/item/${orderId}`);
+        // await api.delete(`${backendUrl}/cartItems/item/${orderId}`);
         setCartItems([])
         // 3) go to the success/details page
         navigate(`/orders/${orderId}`, { replace: true });
