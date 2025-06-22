@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams }                                from 'react-router-dom';
-import axios                                        from 'axios';
-import { ShopContext }                              from '../context/ShopContext';
-import { assets }                                   from '../assets/assets';
-import RelatedProducts                              from '../components/RelatedProducts';
+import { useParams }                          from 'react-router-dom';
+import axios                                  from 'axios';
+import { ShopContext }                        from '../context/ShopContext';
+import { assets }                             from '../assets/assets';
+import RelatedProducts                        from '../components/RelatedProducts';
 
 const Product = () => {
   const { productId } = useParams();
@@ -16,19 +16,18 @@ const Product = () => {
 
   const [productData, setProductData] = useState(null);
   const [image, setImage]             = useState('');
+  const [activeTab, setActiveTab]     = useState('description'); // 'description' | 'reviews'
+  const [reviews, setReviews]         = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
+  // load product details
   useEffect(() => {
     const load = async () => {
       try {
-        const resp = await axios.get(
-          `${backendUrl}/products/${productId}`
-        );
-        const data = resp.data; 
-          
+        const resp = await axios.get(`${backendUrl}/products/${productId}`);
+        const data = resp.data;
         setProductData(data);
-        
         setImage(data.productImages[0]?.imageUrl || '');
-
         getCategoryProducts(data.category);
       } catch (err) {
         console.error('Failed to fetch product details', err);
@@ -37,8 +36,21 @@ const Product = () => {
     load();
   }, [productId, backendUrl]);
 
+  // when switching to Reviews tab, fetch them once
+  useEffect(() => {
+    if (activeTab !== 'reviews' || !productData) return;
+    setLoadingReviews(true);
+    axios
+      .get(`${backendUrl}/products/${productId}/review`)
+      .then(({ data }) => setReviews(data))
+      .catch(err => {
+        console.error('Failed to fetch reviews', err);
+        setReviews([]);
+      })
+      .finally(() => setLoadingReviews(false));
+  }, [activeTab, backendUrl, productId, productData]);
+
   if (!productData) {
-    // you can replace this with a spinner if you like
     return <div className="pt-20 text-center">Loading…</div>;
   }
 
@@ -46,7 +58,7 @@ const Product = () => {
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100">
       {/* Product Section */}
       <div className="flex flex-col sm:flex-row gap-12">
-        {/* Left Section: Images */}
+        {/* Images */}
         <div className="flex-1 flex flex-col sm:flex-row gap-3">
           <div className="flex sm:flex-col overflow-x-auto sm:overflow-y-auto sm:w-[20%] w-full gap-2">
             {productData.productImages.map((img, idx) => (
@@ -72,13 +84,12 @@ const Product = () => {
           </div>
         </div>
 
-        {/* Right Section: Product Details */}
+        {/* Details */}
         <div className="flex-1">
           <h1 className="font-medium text-2xl mt-2">
             {productData.name}
           </h1>
           <div className="flex items-center gap-1 mt-2">
-            {/* simple 4 filled stars + 1 dull, adjust per averageRating if desired */}
             {[1,2,3,4].map(i => (
               <img key={i} src={assets.star_icon} className="w-3.5" alt="Star" />
             ))}
@@ -109,18 +120,46 @@ const Product = () => {
         </div>
       </div>
 
-      {/* Description and Reviews */}
+      {/* Description / Reviews Tabs */}
       <div className="mt-20">
-        <div className="flex">
-          <b className="border px-5 py-3 text-sm">Description</b>
-          <p className="border px-5 py-3 text-sm">
+        <div className="flex border-b">
+          <button
+            onClick={() => setActiveTab('description')}
+            className={`px-5 py-3 text-sm ${activeTab==='description' ? 'border-b-2 border-black font-medium' : 'text-gray-600'}`}
+          >
+            Description
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`px-5 py-3 text-sm ${activeTab==='reviews' ? 'border-b-2 border-black font-medium' : 'text-gray-600'}`}
+          >
             Reviews ({productData.reviewCount})
-          </p>
+          </button>
         </div>
-        <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
-          <p>{productData.features}</p>
-          <p>{productData.specs}</p>
-        </div>
+
+        {activeTab === 'description' ? (
+          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
+            <p>{productData.features}</p>
+            <p>{productData.specs}</p>
+          </div>
+        ) : (
+          <div className="border px-6 py-6 text-sm text-gray-700 space-y-4">
+            {loadingReviews ? (
+              <p>Loading reviews…</p>
+            ) : reviews.length > 0 ? (
+              reviews.map((r, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="font-semibold">
+                    {r.firstName} {r.lastName}
+                  </p>
+                  <p className="text-gray-600">{r.comment}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No reviews yet.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Related Products */}

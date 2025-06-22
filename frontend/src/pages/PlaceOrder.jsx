@@ -105,31 +105,31 @@ const PlaceOrder = () => {
     event.preventDefault();
 
     try {
-      if (method !== 'cod') {
+      if (method !== 'COD') {
 
       const registerPromise =  api.post(`${backendUrl}/orders`, {
         address: formData,
         paymentMethod: method,
         currency: 'usd',
         email: formData.email,
-      });
-        toast.promise(
-          registerPromise,
-          {
-            pending: 'Procceding to checkout...',
-            success: 'Redirecting..',
-          }
-        );
-        setIsSubmitting(true)
+        });
+          toast.promise(
+            registerPromise,
+            {
+              pending: 'Procceding to checkout...',
+              success: 'Redirecting..',
+            }
+          );
+          setIsSubmitting(true)
 
-      const response = await registerPromise
-      if (response.status ===HttpStatusCode.Created &&response.data) {
-        if ( response.data.checkoutUrl) {
-          window.location.href = response.data.checkoutUrl; // redirect to gateway
-        } else {
-          toast.error(response.data.message || 'Payment initialization failed');
+        const response = await registerPromise
+        if (response.status ===HttpStatusCode.Created &&response.data) {
+          if ( response.data.checkoutUrl) {
+            window.location.href = response.data.checkoutUrl; // redirect to gateway
+          } else {
+            toast.error(response.data.message || 'Payment initialization failed');
+          }
         }
-      }
        setIsSubmitting(false)
         return; // stop here if payment method is not cod
       }
@@ -137,21 +137,19 @@ const PlaceOrder = () => {
     // ========== COD FLOW ==========
   
 
-      const orderData = {
+      const responseTwo = await api.post(`${backendUrl}/orders`, {
         address: formData,
-        // items: orderItems,
-        amount: getCartAmount() + delivery_fee,
-        method
-      };
-
-      const response = await axios.post(`${backendUrl}/api/order/place`, orderData, {
-        headers: { token }
+        paymentMethod: method,
+        currency: 'usd',
+        email: formData.email,
       });
 
-      if (response.data.success && response.data.orderId) {
-        navigate(`/orders/${response.data.orderId}`);
+
+      if (responseTwo.status ===HttpStatusCode.Created &&responseTwo.data) {
+ 
+        navigate("/orders/success/"+`${responseTwo.data.checkoutUrl}`);
       } else {
-        toast.error(response.data.message);
+        toast.error(responseTwo.data.message);
       }
 
     } catch (error) {

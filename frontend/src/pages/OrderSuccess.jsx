@@ -17,7 +17,6 @@ const OrderSuccess = () => {
     const res = await api.get(`${backendUrl}/orders/${orderId}`);
 
         if (res.status === HttpStatusCode.Ok) {
-
           setOrder(res.data);
         } else {
           console.error(res.data.message);
@@ -41,7 +40,7 @@ const OrderSuccess = () => {
         <div className="text-2xl">
             <Title text1="ORDER" text2="CONFIRMED 🎉" />
             <p className="text-sm text-gray-600 mb-6">
-                Order ID: <span className="font-medium">{orderId}</span>
+                Order ID: <span className="font-medium">{order.orderNumber}</span>
             </p>
         </div>
 
